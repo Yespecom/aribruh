@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Star, Clock, Users, ThumbsUp, ShoppingCart, Heart, Share2 } from "lucide-react"
@@ -294,11 +294,29 @@ export default function ItemDetailPage() {
   const [currentPartition, setCurrentPartition] = useState({
     partition_no: 1,
     status: "open" as const,
-    items: items.map((item) => ({ ...item, quantity: item.quantity })),
-    subtotal: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    items: [],
+    subtotal: 0,
   })
 
   const [partitions, setPartitions] = useState<any[]>([])
+
+  useEffect(() => {
+    const cartItems = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    }))
+
+    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+    setCurrentPartition({
+      partition_no: 1,
+      status: "open",
+      items: cartItems,
+      subtotal: subtotal,
+    })
+  }, [items])
 
   const updateCurrentPartition = (items: any[]) => {
     items.forEach((item) => {
