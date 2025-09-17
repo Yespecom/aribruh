@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Star, Clock, Users } from "lucide-react"
 import { SidebarCart } from "@/components/sidebar-cart"
@@ -36,28 +36,34 @@ export default function RestaurantApp() {
   const [showPayment, setShowPayment] = useState(false)
   const { toggleSidebar } = useSidebar()
   const router = useRouter()
-  const { addToCart, getTotalItems } = useCart()
+  const { items: globalCartItems, addToCart, updateQuantity, getTotalItems } = useCart()
 
-  const addToCartLegacy = (item: MenuItem) => {
-    const existingItem = currentPartition.items.find((cartItem) => cartItem.id === item.id)
+  useEffect(() => {
+    const cartItems: CartItem[] = globalCartItems.map((item) => ({
+      ...item,
+      quantity: item.quantity,
+    }))
 
-    if (existingItem) {
-      const updatedItems = currentPartition.items.map((cartItem) =>
-        cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem,
-      )
-      updateCurrentPartition(updatedItems)
-    } else {
-      const newItem: CartItem = { ...item, quantity: 1 }
-      updateCurrentPartition([...currentPartition.items, newItem])
-    }
-  }
+    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+    setCurrentPartition((prev) => ({
+      ...prev,
+      items: cartItems,
+      subtotal,
+    }))
+  }, [globalCartItems])
 
   const updateCurrentPartition = (items: CartItem[]) => {
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    setCurrentPartition({
-      ...currentPartition,
-      items,
-      subtotal,
+    // Clear global cart first
+    globalCartItems.forEach((item) => {
+      updateQuantity(item.id, 0)
+    })
+
+    // Add new items to global cart
+    items.forEach((item) => {
+      for (let i = 0; i < item.quantity; i++) {
+        addToCart(item)
+      }
     })
   }
 
@@ -98,6 +104,9 @@ export default function RestaurantApp() {
             onUpdatePartition={updateCurrentPartition}
             onConfirmPartition={(partition) => {
               setPartitions([...partitions, { ...partition, status: "confirmed" }])
+              globalCartItems.forEach((item) => {
+                updateQuantity(item.id, 0)
+              })
               setCurrentPartition({
                 partition_no: partitions.length + 2,
                 status: "open",
@@ -232,6 +241,9 @@ export default function RestaurantApp() {
           onClose={() => setShowPayment(false)}
           onPaymentComplete={() => {
             setPartitions([])
+            globalCartItems.forEach((item) => {
+              updateQuantity(item.id, 0)
+            })
             setCurrentPartition({
               partition_no: 1,
               status: "open",
