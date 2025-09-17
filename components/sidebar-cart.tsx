@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Plus, Minus, ShoppingCart, Check, Clock, Receipt, X } from "lucide-react"
 import { OrderSummary } from "@/components/order-summary"
 import { SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar"
+import { useCart } from "@/contexts/cart-context"
 
 interface TableInfo {
   tableId: string
@@ -49,17 +50,10 @@ export function SidebarCart({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showCompleteOrder, setShowCompleteOrder] = useState(false)
   const { toggleSidebar } = useSidebar()
+  const { updateQuantity: updateGlobalQuantity } = useCart()
 
   const updateItemQuantity = (itemId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      const updatedItems = currentPartition.items.filter((item) => item.id !== itemId)
-      onUpdatePartition(updatedItems)
-    } else {
-      const updatedItems = currentPartition.items.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item,
-      )
-      onUpdatePartition(updatedItems)
-    }
+    updateGlobalQuantity(itemId, newQuantity)
   }
 
   const handleConfirmPartition = () => {
