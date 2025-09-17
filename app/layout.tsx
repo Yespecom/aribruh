@@ -11,7 +11,7 @@ import { CartProvider } from "@/contexts/cart-context"
 export const metadata: Metadata = {
   title: "Restaurant Ordering App",
   description: "Order food from our restaurant menu",
-  generator: "v0.app",
+  
 }
 
 export default function RootLayout({
