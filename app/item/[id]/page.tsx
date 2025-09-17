@@ -254,7 +254,7 @@ export default function ItemDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [selectedCustomizations, setSelectedCustomizations] = useState<Record<string, string>>({})
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const { addToCart, getTotalItems } = useCart()
+  const { addToCart, updateQuantity, getTotalItems, items } = useCart()
   const [reviews, setReviews] = useState([
     {
       id: 1,
@@ -335,7 +335,11 @@ export default function ItemDetailPage() {
 
   const handleAddToCart = (itemName: string) => {
     if (item) {
-      for (let i = 0; i < quantity; i++) {
+      const existingCartItem = items.find((cartItem) => cartItem.id === item.id)
+
+      if (existingCartItem) {
+        updateQuantity(item.id, existingCartItem.quantity + quantity)
+      } else {
         addToCart({
           id: item.id,
           name: item.name,
@@ -344,6 +348,11 @@ export default function ItemDetailPage() {
           category: item.category,
           ingredients: item.ingredients,
         })
+        if (quantity > 1) {
+          setTimeout(() => {
+            updateQuantity(item.id, quantity)
+          }, 0)
+        }
       }
       console.log(`Added ${quantity}x ${itemName} to cart`)
     }
